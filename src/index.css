@@ -9,7 +9,7 @@ body {
 }
 
 .dotted-bg {
-  background-image: radial-gradient(circle, #e5e7eb 1px, transparent 1px);
+  /* background-image: radial-gradient(circle, #e5e7eb 1px, transparent 1px); */
   background-size: 22px 22px;
 }
 

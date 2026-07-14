@@ -203,8 +203,8 @@ function LoginScreen({ onLogin }) {
       onLogin({
         name: data.name,
         code: data.code,
-        checkIn: data.attendance.checkIn ? new Date(data.attendance.checkIn) : null,
-        checkOut: data.attendance.checkOut ? new Date(data.attendance.checkOut) : null,
+        logIn: data.attendance.logIn ? new Date(data.attendance.logIn) : null,
+        logOut: data.attendance.logOut ? new Date(data.attendance.logOut) : null,
       });
     } catch (err) {
       // Server told us the code/name combo is wrong — this is the
@@ -278,7 +278,7 @@ function LoginScreen({ onLogin }) {
         </div>
 
         <p className="mt-6 text-center text-xs text-gray-400">
-          Valid codes range from BEPL001 to BEPL999
+          {/* Valid codes range from BEPL001 to BEPL999 */}
         </p>
       </div>
     </div>
@@ -428,8 +428,8 @@ function AttendanceCalendar({ records, loading }) {
                   <p className="mt-1 text-xs text-red-600">Marked absent — no check-in recorded.</p>
                 ) : (
                   <p className="mt-1 text-xs text-gray-500">
-                    In {fmtTime(selectedRecord.checkIn ? new Date(selectedRecord.checkIn) : null)} · Out{" "}
-                    {fmtTime(selectedRecord.checkOut ? new Date(selectedRecord.checkOut) : null)} ·{" "}
+                    In {fmtTime(selectedRecord.logIn ? new Date(selectedRecord.logIn) : null)} · Out{" "}
+                    {fmtTime(selectedRecord.logOut ? new Date(selectedRecord.logOut) : null)} ·{" "}
                     {fmtHours(selectedRecord.totalHours)}
                   </p>
                 )}
@@ -482,25 +482,25 @@ function Dashboard({ user, setUser, onLogout }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.code]);
 
-  const isCheckedIn = !!user.checkIn && !user.checkOut;
-  const isDone = !!user.checkIn && !!user.checkOut;
+  const isCheckedIn = !!user.logIn && !user.logOut;
+  const isDone = !!user.logIn && !!user.logOut;
 
-  const elapsedMs = isCheckedIn ? now - user.checkIn : 0;
+  const elapsedMs = isCheckedIn ? now - user.logIn : 0;
   const shiftTargetMs = 8 * 60 * 60 * 1000;
   const progress = isCheckedIn ? elapsedMs / shiftTargetMs : 0;
 
   const totalHours = useMemo(() => {
-    if (!user.checkIn || !user.checkOut) return null;
-    return (user.checkOut - user.checkIn) / (1000 * 60 * 60);
-  }, [user.checkIn, user.checkOut]);
+    if (!user.logIn || !user.logOut) return null;
+    return (user.logOut - user.logIn) / (1000 * 60 * 60);
+  }, [user.logIn, user.logOut]);
 
-  const handleCheckIn = async () => {
+  const handlelogIn = async () => {
     if (isCheckedIn || isDone || busy) return;
     setBusy(true);
     setActionError("");
     try {
-      const data = await callApi("checkin", { code: user.code });
-      setUser((u) => ({ ...u, checkIn: new Date(data.checkIn), checkOut: null }));
+      const data = await callApi("logIn", { code: user.code });
+      setUser((u) => ({ ...u, logIn: new Date(data.logIn), logOut: null }));
       loadHistory();
     } catch (err) {
       // Server enforces "no double check-in" — if this fires, someone
@@ -511,13 +511,13 @@ function Dashboard({ user, setUser, onLogout }) {
     }
   };
 
-  const handleCheckOut = async () => {
+  const handlelogOut = async () => {
     if (!isCheckedIn || busy) return;
     setBusy(true);
     setActionError("");
     try {
-      const data = await callApi("checkout", { code: user.code });
-      setUser((u) => ({ ...u, checkOut: new Date(data.checkOut) }));
+      const data = await callApi("logOut", { code: user.code });
+      setUser((u) => ({ ...u, logOut: new Date(data.logOut) }));
       loadHistory();
     } catch (err) {
       // Server enforces "no double check-out" the same way.
@@ -554,7 +554,7 @@ function Dashboard({ user, setUser, onLogout }) {
               className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
             >
               <LogOut size={13} />
-              Log out
+              Sign out
             </button>
           </div>
         </div>
@@ -574,9 +574,9 @@ function Dashboard({ user, setUser, onLogout }) {
             </p>
             <h2 className="mt-1 text-xl font-semibold tracking-tight text-gray-900">
               {isDone
-                ? `Checked out at ${fmtTime(user.checkOut)}`
+                ? `Checked out at ${fmtTime(user.logOut)}`
                 : isCheckedIn
-                ? `Checked in at ${fmtTime(user.checkIn)}`
+                ? `Checked in at ${fmtTime(user.logIn)}`
                 : `Mark attendance for ${user.name.split(" ")[0]}`}
             </h2>
             <p className="mt-1 text-sm text-gray-500">
@@ -589,20 +589,20 @@ function Dashboard({ user, setUser, onLogout }) {
 
             <div className="mt-5 flex items-center justify-center sm:justify-start gap-3">
               <button
-                onClick={handleCheckIn}
+                onClick={handlelogIn}
                 disabled={isCheckedIn || isDone || busy}
                 className="flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
               >
                 {busy && !isCheckedIn ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
-                Check in
+                Login
               </button>
               <button
-                onClick={handleCheckOut}
+                onClick={handlelogOut}
                 disabled={!isCheckedIn || busy}
                 className="flex items-center gap-2 rounded-xl border border-gray-300 px-5 py-3 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:border-gray-100 disabled:text-gray-300"
               >
                 {busy && isCheckedIn ? <Loader2 size={15} className="animate-spin" /> : <LogOut size={15} />}
-                Check out
+                Log out
               </button>
             </div>
 
